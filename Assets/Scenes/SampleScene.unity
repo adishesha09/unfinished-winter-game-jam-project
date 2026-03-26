@@ -1002,6 +1002,9 @@ MonoBehaviour:
   moveLimit: 3
   dragCostsMoves: 1
   maxUndoSteps: 10
+  switchCursorTexture: {fileID: 2800000, guid: ca4ee2c5a9c626147b84a9dc93548265, type: 3}
+  cursorHotspot: {x: 0, y: 0}
+  cursorSizePixels: 128
 --- !u!4 &1125056044
 Transform:
   m_ObjectHideFlags: 0

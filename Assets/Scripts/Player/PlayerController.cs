@@ -35,6 +35,7 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
 
     private float _coyoteTimeCounter;
     private float _jumpBufferCounter;
+    private MovingPlatform _currentPlatform;
 
     private float EffectiveGravity => Physics.gravity.y * gravityMultiplier;
     private float TargetSpeed => _sprintHeld ? sprintSpeed : walkSpeed;
@@ -55,12 +56,14 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     private void Update()
     {
         UpdateGroundState();
+        UpdatePlatformTracking();
         TickJumpBuffer();
         ProcessJump();
         ProcessHorizontalMovement();
         ApplyGravity();
 
-        _characterController.Move((_horizontalVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime);
+        Vector3 platformCarry = _currentPlatform != null ? _currentPlatform.DeltaPosition : Vector3.zero;
+        _characterController.Move((_horizontalVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime + platformCarry);
     }
 
     private void UpdateGroundState()
@@ -76,6 +79,21 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
         {
             _coyoteTimeCounter -= Time.deltaTime;
         }
+    }
+
+    private void UpdatePlatformTracking()
+    {
+        if (!_characterController.isGrounded)
+        {
+            _currentPlatform = null;
+            return;
+        }
+
+        float rayLength = _characterController.height / 2f + _characterController.skinWidth + 0.1f;
+
+        _currentPlatform = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, rayLength)
+            ? hit.collider.GetComponentInParent<MovingPlatform>()
+            : null;
     }
 
     private void TickJumpBuffer()

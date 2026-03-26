@@ -14,6 +14,9 @@ public class SwitchController : MonoBehaviour
     [SerializeField] private int moveLimit = -1;
     [SerializeField] private bool dragCostsMoves = true;
     [SerializeField] private int maxUndoSteps = 10;
+    [SerializeField] private Texture2D switchCursorTexture;
+    [SerializeField] private Vector2 cursorHotspot = Vector2.zero;
+    [SerializeField] private int cursorSizePixels = 32;
 
     public event Action<int> OnMovesRemainingChanged;
 
@@ -54,6 +57,8 @@ public class SwitchController : MonoBehaviour
     private readonly List<SwitchOperation> _undoStack = new();
     private int _movesUsed;
     private LineRenderer _previewLine;
+    private bool _switchCursorActive;
+    private Texture2D _scaledCursorTexture;
 
     private void Awake()
     {
@@ -61,6 +66,40 @@ public class SwitchController : MonoBehaviour
             targetCamera = Camera.main;
 
         SetupPreviewLine();
+        BuildScaledCursor();
+    }
+
+    private void BuildScaledCursor()
+    {
+        if (switchCursorTexture == null) return;
+
+        int srcW = switchCursorTexture.width;
+        int srcH = switchCursorTexture.height;
+        int targetSize = Mathf.Max(1, cursorSizePixels);
+
+        float scale = (float)targetSize / Mathf.Max(srcW, srcH);
+        int dstW = Mathf.Max(1, Mathf.RoundToInt(srcW * scale));
+        int dstH = Mathf.Max(1, Mathf.RoundToInt(srcH * scale));
+
+        if (dstW == srcW && dstH == srcH)
+        {
+            _scaledCursorTexture = switchCursorTexture;
+            return;
+        }
+
+        RenderTexture rt = RenderTexture.GetTemporary(dstW, dstH, 0, RenderTextureFormat.ARGB32);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = rt;
+
+        GL.Clear(true, true, Color.clear);
+        Graphics.Blit(switchCursorTexture, rt);
+
+        _scaledCursorTexture = new Texture2D(dstW, dstH, TextureFormat.RGBA32, false);
+        _scaledCursorTexture.ReadPixels(new Rect(0, 0, dstW, dstH), 0, 0);
+        _scaledCursorTexture.Apply();
+
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(rt);
     }
 
     private void SetupPreviewLine()
@@ -114,6 +153,8 @@ public class SwitchController : MonoBehaviour
                 break;
         }
 
+        UpdateCursor();
+
         if (Keyboard.current == null) return;
 
         if (Keyboard.current.ctrlKey.isPressed && Keyboard.current.zKey.wasPressedThisFrame)
@@ -121,6 +162,43 @@ public class SwitchController : MonoBehaviour
 
         if (Keyboard.current.rKey.wasPressedThisFrame)
             ResetPuzzle();
+    }
+
+    private void UpdateCursor()
+    {
+        Texture2D cursorTex = _scaledCursorTexture != null ? _scaledCursorTexture : switchCursorTexture;
+
+        bool needsSwitchCursor = cursorTex != null
+            && (_inputState == InputState.Dragging
+                || _selectedObject != null
+                || _hoveredObject != null);
+
+        if (needsSwitchCursor && !_switchCursorActive)
+        {
+            bool isScaled = _scaledCursorTexture != null && _scaledCursorTexture != switchCursorTexture;
+            Vector2 scaledHotspot = cursorHotspot;
+            if (isScaled && switchCursorTexture != null)
+            {
+                float scale = (float)Mathf.Max(1, cursorSizePixels) / Mathf.Max(switchCursorTexture.width, switchCursorTexture.height);
+                scaledHotspot = cursorHotspot * scale;
+            }
+            UnityEngine.Cursor.SetCursor(cursorTex, scaledHotspot, CursorMode.ForceSoftware);
+            _switchCursorActive = true;
+        }
+        else if (!needsSwitchCursor && _switchCursorActive)
+        {
+            UnityEngine.Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+            _switchCursorActive = false;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_switchCursorActive)
+        {
+            UnityEngine.Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+            _switchCursorActive = false;
+        }
     }
 
     private void BeginPendingAction()
