@@ -424,6 +424,12 @@ public class SwitchController : MonoBehaviour
     {
         if (_undoStack.Count == 0) return;
 
+        if (_inputState == InputState.Dragging)
+            CancelDrag();
+
+        Deselect();
+        _inputState = InputState.Idle;
+
         SwitchOperation op = _undoStack[_undoStack.Count - 1];
         _undoStack.RemoveAt(_undoStack.Count - 1);
 

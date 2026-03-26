@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class PlayerCameraController : MonoBehaviour
 {
@@ -36,6 +37,8 @@ public class PlayerCameraController : MonoBehaviour
     [SerializeField] private float progressionStartYDelta = -1f;
     [SerializeField] private float progressionEndYDelta = 2f;
 
+    [SerializeField] private float bounceZoomAmount = 5f;
+
     private Camera _camera;
 
     private float _xVelocity;
@@ -47,6 +50,9 @@ public class PlayerCameraController : MonoBehaviour
     private float _trauma;
     private float _currentHorizontalSpeed;
     private float _currentVerticalSpeed;
+    private float _bounceFovBonus;
+    private bool _anchorLocked;
+    private Coroutine _springboardRoutine;
 
     private Vector3 _previousTargetPosition;
 
@@ -116,6 +122,8 @@ public class PlayerCameraController : MonoBehaviour
 
     private void UpdateVerticalAnchor()
     {
+        if (_anchorLocked) return;
+
         float playerTargetY = followTarget.position.y + DynamicYOffset;
 
         if (playerTargetY > _anchoredY + verticalDeadzone)
@@ -151,7 +159,7 @@ public class PlayerCameraController : MonoBehaviour
         float sprintProgress = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(fovRampStartSpeed, fovRampEndSpeed, Mathf.Abs(_currentHorizontalSpeed)));
         float fallProgress = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, -fallFovMaxSpeed, _currentVerticalSpeed));
 
-        float targetFov = baseFov + sprintProgress * sprintFovBonus + fallProgress * fallFovBonus;
+        float targetFov = baseFov + sprintProgress * sprintFovBonus + fallProgress * fallFovBonus + _bounceFovBonus;
         _camera.fieldOfView = Mathf.SmoothDamp(_camera.fieldOfView, targetFov, ref _fovVelocity, fovSmoothTime);
     }
 
@@ -164,6 +172,52 @@ public class PlayerCameraController : MonoBehaviour
         float shakeY = maxShakeAngle * shake * (Mathf.PerlinNoise(0f, Time.time * 40f) * 2f - 1f);
 
         transform.rotation = Quaternion.Euler(fixedPitch + shakeY, shakeX, 0f);
+    }
+
+    public void OnSpringboardBounce(float squishDuration)
+    {
+        if (_springboardRoutine != null)
+        {
+            StopCoroutine(_springboardRoutine);
+            _bounceFovBonus = 0f;
+            _anchorLocked = false;
+        }
+
+        AddTrauma(0.25f);
+        _springboardRoutine = StartCoroutine(SpringboardCameraRoutine(squishDuration));
+    }
+
+    private IEnumerator SpringboardCameraRoutine(float squishDuration)
+    {
+        _anchorLocked = true;
+
+        float punchInDuration = 0.06f;
+        float elapsed = 0f;
+
+        while (elapsed < punchInDuration)
+        {
+            elapsed += Time.deltaTime;
+            _bounceFovBonus = Mathf.Lerp(0f, -bounceZoomAmount, elapsed / punchInDuration);
+            yield return null;
+        }
+
+        _bounceFovBonus = -bounceZoomAmount;
+        yield return new WaitForSeconds(Mathf.Max(0f, squishDuration - punchInDuration));
+
+        _anchorLocked = false;
+
+        float releaseDuration = 0.2f;
+        elapsed = 0f;
+
+        while (elapsed < releaseDuration)
+        {
+            elapsed += Time.deltaTime;
+            _bounceFovBonus = Mathf.Lerp(-bounceZoomAmount, 0f, elapsed / releaseDuration);
+            yield return null;
+        }
+
+        _bounceFovBonus = 0f;
+        _springboardRoutine = null;
     }
 
     private float DynamicYOffset

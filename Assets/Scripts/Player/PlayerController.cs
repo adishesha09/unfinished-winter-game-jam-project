@@ -91,9 +91,15 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
 
         float rayLength = _characterController.height / 2f + _characterController.skinWidth + 0.1f;
 
-        _currentPlatform = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, rayLength)
-            ? hit.collider.GetComponentInParent<MovingPlatform>()
-            : null;
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, rayLength))
+        {
+            _currentPlatform = hit.collider.GetComponentInParent<MovingPlatform>();
+            hit.collider.GetComponentInParent<MushroomSpringboard>()?.TryBounce(this);
+        }
+        else
+        {
+            _currentPlatform = null;
+        }
     }
 
     private void TickJumpBuffer()
@@ -166,6 +172,17 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
         _verticalVelocity += EffectiveGravity * multiplier * Time.deltaTime;
         _verticalVelocity = Mathf.Max(_verticalVelocity, -terminalFallSpeed);
     }
+
+    public float VerticalVelocity => _verticalVelocity;
+
+    public void ApplyVerticalBoost(float launchSpeed)
+    {
+        _verticalVelocity = launchSpeed;
+        _isJumping = true;
+        _coyoteTimeCounter = 0f;
+        _jumpBufferCounter = 0f;
+    }
+
 
     public void OnMove(InputAction.CallbackContext context) =>
         _rawMoveInput = context.ReadValue<Vector2>();
