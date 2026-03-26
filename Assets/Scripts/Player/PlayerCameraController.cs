@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerCameraController : MonoBehaviour
 {
     [SerializeField] private Transform followTarget;
-    [SerializeField] private Vector3 cameraOffset = new Vector3(0f, 2f, -10f);
+    [SerializeField] private Vector3 cameraOffset = new Vector3(0f, 2f, -20f);
     [SerializeField] private float fixedPitch = 8f;
 
     [SerializeField] private float horizontalSmoothTime = 0.12f;
@@ -16,7 +16,7 @@ public class PlayerCameraController : MonoBehaviour
 
     [SerializeField] private float verticalDeadzone = 0.8f;
 
-    [SerializeField] private float baseFov = 62f;
+    [SerializeField] private float baseFov = 75f;
     [SerializeField] private float sprintFovBonus = 8f;
     [SerializeField] private float fallFovBonus = 5f;
     [SerializeField] private float fallFovMaxSpeed = 15f;

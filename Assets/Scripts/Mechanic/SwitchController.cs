@@ -19,6 +19,7 @@ public class SwitchController : MonoBehaviour
     [SerializeField] private int cursorSizePixels = 32;
 
     public event Action<int> OnMovesRemainingChanged;
+    public event Action OnSwitchPerformed;
 
     public int MovesRemaining => moveLimit < 0 ? int.MaxValue : moveLimit - _movesUsed;
 
@@ -59,12 +60,14 @@ public class SwitchController : MonoBehaviour
     private LineRenderer _previewLine;
     private bool _switchCursorActive;
     private Texture2D _scaledCursorTexture;
+    private PlayerAnimationController _playerAnimController;
 
     private void Awake()
     {
         if (targetCamera == null)
             targetCamera = Camera.main;
 
+        _playerAnimController = FindFirstObjectByType<PlayerAnimationController>();
         SetupPreviewLine();
         BuildScaledCursor();
     }
@@ -286,6 +289,8 @@ public class SwitchController : MonoBehaviour
                     _movesUsed++;
                     OnMovesRemainingChanged?.Invoke(MovesRemaining);
                 }
+
+                OnSwitchPerformed?.Invoke();
             }
 
             _dragObject.SetVisualState(SwitchVisualState.Normal);
@@ -316,6 +321,8 @@ public class SwitchController : MonoBehaviour
 
     private void HandleClick()
     {
+        if (_playerAnimController != null && _playerAnimController.IsCasting) return;
+
         SwitchableObject clicked = Raycast();
 
         if (clicked == null)
@@ -382,8 +389,21 @@ public class SwitchController : MonoBehaviour
         _movesUsed++;
         OnMovesRemainingChanged?.Invoke(MovesRemaining);
 
-        a.MoveTo(posB, arcMultiplier: 1f);
-        b.MoveTo(posA, arcMultiplier: 0.4f);
+        if (_playerAnimController != null)
+        {
+            _playerAnimController.TriggerCast(() =>
+            {
+                a.MoveTo(posB, arcMultiplier: 1f);
+                b.MoveTo(posA, arcMultiplier: 0.4f);
+                OnSwitchPerformed?.Invoke();
+            });
+        }
+        else
+        {
+            a.MoveTo(posB, arcMultiplier: 1f);
+            b.MoveTo(posA, arcMultiplier: 0.4f);
+            OnSwitchPerformed?.Invoke();
+        }
     }
 
     private void UpdateHover()

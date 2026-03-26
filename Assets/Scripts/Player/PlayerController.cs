@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     [SerializeField] private float deceleration = 20f;
     [SerializeField] private float rotationSpeed = 540f;
 
-    [SerializeField] private float jumpHeight = 6f;
+    [SerializeField] private float jumpHeight = 8f;
     [SerializeField] private float gravityMultiplier = 1.8f;
     [SerializeField] private float fallGravityMultiplier = 3f;
     [SerializeField] private float minFallMultiplier = 1f;
@@ -21,6 +21,9 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     [SerializeField] private float terminalFallSpeed = 20f;
     [SerializeField] private float coyoteTime = 0.15f;
     [SerializeField] private float jumpBufferDuration = 0.2f;
+    [SerializeField] private float fallGravityEaseScale = 0.55f;
+    [SerializeField] private float slipperyAcceleration = 2f;
+    [SerializeField] private float slipperyDeceleration = 0.8f;
 
     private CharacterController _characterController;
     private InputSystem_Actions _inputActions;
@@ -32,6 +35,8 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     private bool _sprintHeld;
     private bool _jumpBuffered;
     private bool _isJumping;
+    private bool _onSlipperySurface;
+    private float _currentSlipperiness;
 
     private float _coyoteTimeCounter;
     private float _jumpBufferCounter;
@@ -63,6 +68,10 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
         ApplyGravity();
 
         Vector3 platformCarry = _currentPlatform != null ? _currentPlatform.DeltaPosition : Vector3.zero;
+
+        _onSlipperySurface = false;
+        _currentSlipperiness = 0f;
+
         _characterController.Move((_horizontalVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime + platformCarry);
     }
 
@@ -130,7 +139,16 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     {
         Vector3 desiredDirection = GetMoveDirection();
         Vector3 targetVelocity = desiredDirection * TargetSpeed;
-        float blendRate = desiredDirection.sqrMagnitude > 0f ? acceleration : deceleration;
+
+        float accel = _onSlipperySurface
+            ? Mathf.Lerp(acceleration, slipperyAcceleration, _currentSlipperiness)
+            : acceleration;
+
+        float decel = _onSlipperySurface
+            ? Mathf.Lerp(deceleration, slipperyDeceleration, _currentSlipperiness)
+            : deceleration;
+
+        float blendRate = desiredDirection.sqrMagnitude > 0f ? accel : decel;
 
         _horizontalVelocity = Vector3.MoveTowards(_horizontalVelocity, targetVelocity, blendRate * Time.deltaTime);
 
@@ -162,7 +180,7 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
         else if (_verticalVelocity < 0f)
         {
             float fallProgress = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, fallGravityRampSpeed, -_verticalVelocity));
-            multiplier = Mathf.Lerp(minFallMultiplier, fallGravityMultiplier, fallProgress);
+            multiplier = Mathf.Lerp(fallGravityMultiplier * fallGravityEaseScale, fallGravityMultiplier, fallProgress);
         }
         else
         {
@@ -174,6 +192,8 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     }
 
     public float VerticalVelocity => _verticalVelocity;
+    public float HorizontalSpeed  => _horizontalVelocity.magnitude;
+    public bool  IsGrounded        => _characterController.isGrounded;
 
     public void ApplyVerticalBoost(float launchSpeed)
     {
@@ -205,4 +225,13 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     public void OnCrouch(InputAction.CallbackContext context) { }
     public void OnPrevious(InputAction.CallbackContext context) { }
     public void OnNext(InputAction.CallbackContext context) { }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        SlipperySurface slippery = hit.collider.GetComponentInParent<SlipperySurface>();
+        if (slippery == null) return;
+
+        _onSlipperySurface = true;
+        _currentSlipperiness = slippery.Slipperiness;
+    }
 }
