@@ -37,6 +37,9 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     private bool _isJumping;
     private bool _onSlipperySurface;
     private float _currentSlipperiness;
+    private Vector3 _slipDirection;
+    private float _slipForce;
+    private bool _prevOnSlipperySurface;
 
     private float _coyoteTimeCounter;
     private float _jumpBufferCounter;
@@ -60,6 +63,8 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
 
     private void Update()
     {
+        if (IsInputLocked) return;
+
         UpdateGroundState();
         UpdatePlatformTracking();
         TickJumpBuffer();
@@ -69,10 +74,14 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
 
         Vector3 platformCarry = _currentPlatform != null ? _currentPlatform.DeltaPosition : Vector3.zero;
 
+        _prevOnSlipperySurface = _onSlipperySurface;
         _onSlipperySurface = false;
         _currentSlipperiness = 0f;
 
         _characterController.Move((_horizontalVelocity + Vector3.up * _verticalVelocity) * Time.deltaTime + platformCarry);
+
+        if (_onSlipperySurface && !_prevOnSlipperySurface)
+            _horizontalVelocity = _slipDirection * _slipForce;
     }
 
     private void UpdateGroundState()
@@ -138,7 +147,10 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     private void ProcessHorizontalMovement()
     {
         Vector3 desiredDirection = GetMoveDirection();
-        Vector3 targetVelocity = desiredDirection * TargetSpeed;
+        Vector3 targetVelocity   = desiredDirection * TargetSpeed;
+
+        if (_onSlipperySurface && desiredDirection.sqrMagnitude < 0.01f)
+            targetVelocity = _slipDirection * (_slipForce * 0.5f);
 
         float accel = _onSlipperySurface
             ? Mathf.Lerp(acceleration, slipperyAcceleration, _currentSlipperiness)
@@ -194,6 +206,7 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
     public float VerticalVelocity => _verticalVelocity;
     public float HorizontalSpeed  => _horizontalVelocity.magnitude;
     public bool  IsGrounded        => _characterController.isGrounded;
+    public bool  IsInputLocked     { get; set; }
 
     public void ApplyVerticalBoost(float launchSpeed)
     {
@@ -231,7 +244,21 @@ public class PlayerController : MonoBehaviour, InputSystem_Actions.IPlayerAction
         SlipperySurface slippery = hit.collider.GetComponentInParent<SlipperySurface>();
         if (slippery == null) return;
 
-        _onSlipperySurface = true;
-        _currentSlipperiness = slippery.Slipperiness;
+        _onSlipperySurface    = true;
+        _currentSlipperiness  = slippery.Slipperiness;
+        _slipForce            = slippery.SlipForce;
+
+        Vector3 flatNormal = new Vector3(hit.normal.x, 0f, hit.normal.z);
+
+        if (flatNormal.sqrMagnitude > 0.01f)
+        {
+            _slipDirection = flatNormal.normalized;
+        }
+        else
+        {
+            Vector3 away = transform.position - hit.collider.transform.position;
+            away.y = 0f;
+            _slipDirection = away.sqrMagnitude > 0.01f ? away.normalized : Vector3.right;
+        }
     }
 }

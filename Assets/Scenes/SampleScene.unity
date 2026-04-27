@@ -460,6 +460,44 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: feaac715ae5ae6a49a823df7081c637f, type: 3}
+--- !u!1 &212809701 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6797330963786304823, guid: f4fe497e2648d2244bcf9d3e696c41ab, type: 3}
+  m_PrefabInstance: {fileID: 540442803}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &212809705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 212809701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5adc719c887f4b3ca9feba25b3dffe8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LevelExit
+--- !u!65 &212809706
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 212809701}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.15163505, y: 0.21255186, z: 0.008568271}
+  m_Center: {x: -0.030719647, y: 0.044014163, z: -0.0014173617}
 --- !u!1 &245951814
 GameObject:
   m_ObjectHideFlags: 0
@@ -1878,6 +1916,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f4fe497e2648d2244bcf9d3e696c41ab, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1456169125}
+    - targetCorrespondingSourceObject: {fileID: 6797330963786304823, guid: f4fe497e2648d2244bcf9d3e696c41ab, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 212809706}
+    - targetCorrespondingSourceObject: {fileID: 6797330963786304823, guid: f4fe497e2648d2244bcf9d3e696c41ab, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 212809705}
   m_SourcePrefab: {fileID: 100100000, guid: f4fe497e2648d2244bcf9d3e696c41ab, type: 3}
 --- !u!1001 &556853011
 PrefabInstance:
@@ -2772,6 +2816,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 91e181162f1f2884f9480200bcb2d776, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1595224571}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 91e181162f1f2884f9480200bcb2d776, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1595224573}
   m_SourcePrefab: {fileID: 100100000, guid: 91e181162f1f2884f9480200bcb2d776, type: 3}
 --- !u!1 &924418793 stripped
 GameObject:
@@ -2791,6 +2838,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlipperySurface
   slipperiness: 1
+  slipForce: 5
 --- !u!1001 &955745529
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3428,6 +3476,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlipperySurface
   slipperiness: 1
+  slipForce: 5
 --- !u!1001 &1167299523
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3752,6 +3801,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlipperySurface
   slipperiness: 1
+  slipForce: 5
 --- !u!1001 &1266334865
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4052,6 +4102,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlipperySurface
   slipperiness: 1
+  slipForce: 5
 --- !u!1001 &1348238500
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4595,6 +4646,33 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!54 &1595224573
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1595224567}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 120
+  m_CollisionDetection: 0
 --- !u!1001 &1647708674
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5026,6 +5104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlipperySurface
   slipperiness: 1
+  slipForce: 5
 --- !u!1001 &1829265146
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6091,6 +6170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlipperySurface
   slipperiness: 1
+  slipForce: 5
 --- !u!1001 &2104842070
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6430,6 +6510,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SlipperySurface
   slipperiness: 1
+  slipForce: 5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

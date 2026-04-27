@@ -19,6 +19,21 @@ public class PlayerAnimationController : MonoBehaviour
     {
         _animator = GetComponentInChildren<Animator>();
         _playerController = GetComponent<PlayerController>();
+
+        if (_animator != null)
+        {
+            _animator.applyRootMotion = false;
+
+            if (_animator.gameObject.GetComponent<CharacterRootMotionGuard>() == null)
+                _animator.gameObject.AddComponent<CharacterRootMotionGuard>();
+
+            foreach (Collider col in _animator.gameObject.GetComponentsInChildren<Collider>(true))
+            {
+                if (col is CharacterController) continue;
+                col.enabled = false;
+            }
+        }
+
         CacheCastClipLength();
     }
 
@@ -39,6 +54,8 @@ public class PlayerAnimationController : MonoBehaviour
     private void Update()
     {
         if (_animator == null || _playerController == null) return;
+
+        _animator.applyRootMotion = false;
 
         _animator.SetFloat(speedParam, _playerController.HorizontalSpeed);
         _animator.SetBool(isGroundedParam, _playerController.IsGrounded);

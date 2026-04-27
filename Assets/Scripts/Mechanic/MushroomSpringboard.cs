@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MushroomSpringboard : MonoBehaviour
@@ -16,8 +17,10 @@ public class MushroomSpringboard : MonoBehaviour
 
     private Vector3 _frozenPosition;
     private Quaternion _frozenRotation;
-    private Vector3[] _frozenChildLocalPositions;
-    private Quaternion[] _frozenChildLocalRotations;
+
+    private Transform[] _frozenTransforms;
+    private Vector3[] _frozenLocalPositions;
+    private Quaternion[] _frozenLocalRotations;
 
     private void Awake()
     {
@@ -39,15 +42,23 @@ public class MushroomSpringboard : MonoBehaviour
         _frozenPosition = transform.position;
         _frozenRotation = transform.rotation;
 
-        int count = transform.childCount;
-        _frozenChildLocalPositions = new Vector3[count];
-        _frozenChildLocalRotations = new Quaternion[count];
+        List<Transform> structural = new List<Transform>();
 
-        for (int i = 0; i < count; i++)
+        foreach (Transform t in GetComponentsInChildren<Transform>(true))
         {
-            Transform child = transform.GetChild(i);
-            _frozenChildLocalPositions[i] = child.localPosition;
-            _frozenChildLocalRotations[i] = child.localRotation;
+            if (t == transform) continue;
+            if (t.GetComponent<Collider>() != null || t.GetComponent<Renderer>() != null)
+                structural.Add(t);
+        }
+
+        _frozenTransforms      = structural.ToArray();
+        _frozenLocalPositions  = new Vector3[_frozenTransforms.Length];
+        _frozenLocalRotations  = new Quaternion[_frozenTransforms.Length];
+
+        for (int i = 0; i < _frozenTransforms.Length; i++)
+        {
+            _frozenLocalPositions[i] = _frozenTransforms[i].localPosition;
+            _frozenLocalRotations[i] = _frozenTransforms[i].localRotation;
         }
     }
 
@@ -56,11 +67,11 @@ public class MushroomSpringboard : MonoBehaviour
         transform.position = _frozenPosition;
         transform.rotation = _frozenRotation;
 
-        for (int i = 0; i < transform.childCount; i++)
+        for (int i = 0; i < _frozenTransforms.Length; i++)
         {
-            Transform child = transform.GetChild(i);
-            child.localPosition = _frozenChildLocalPositions[i];
-            child.localRotation = _frozenChildLocalRotations[i];
+            if (_frozenTransforms[i] == null) continue;
+            _frozenTransforms[i].localPosition = _frozenLocalPositions[i];
+            _frozenTransforms[i].localRotation = _frozenLocalRotations[i];
         }
     }
 

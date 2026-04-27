@@ -22,6 +22,7 @@ public class SwitchController : MonoBehaviour
     public event Action OnSwitchPerformed;
 
     public int MovesRemaining => moveLimit < 0 ? int.MaxValue : moveLimit - _movesUsed;
+    public int MovesUsed      => _movesUsed;
 
     private bool HasMovesRemaining => moveLimit < 0 || _movesUsed < moveLimit;
 
